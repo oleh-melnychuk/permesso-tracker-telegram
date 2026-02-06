@@ -12,6 +12,17 @@ if (!TELEGRAM_BOT_TOKEN) {
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
+/**
+ * Sanitize HTML for Telegram - strips all HTML tags from external content
+ * since it may contain malformed or unsupported tags
+ */
+function sanitizeForTelegram(text) {
+  if (!text) return '';
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')  // Convert <br> to newlines
+    .replace(/<[^>]+>/g, '');        // Strip all HTML tags
+}
+
 // /start command
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
@@ -61,7 +72,7 @@ bot.onText(/\/add(?:\s+(.+))?/, async (msg, match) => {
 You will receive daily updates at 9:00 AM Rome time.
 
 Current status:
-${status.description}`, { parse_mode: 'HTML' });
+${sanitizeForTelegram(status.description)}`, { parse_mode: 'HTML' });
     
   } catch (error) {
     await bot.sendMessage(chatId, `❌ Error: ${error.message}`);
@@ -109,7 +120,7 @@ bot.onText(/\/status/, async (msg) => {
 📝 Pratica: <code>${status.praticaNumber}</code>
 📅 ${status.pubDate}
 
-${status.description}`, { parse_mode: 'HTML' });
+${sanitizeForTelegram(status.description)}`, { parse_mode: 'HTML' });
     
   } catch (error) {
     await bot.sendMessage(chatId, `❌ Error: ${error.message}`);

@@ -4,6 +4,17 @@ import { fetchPermessoStatus } from './permesso-checker.js';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
+/**
+ * Sanitize HTML for Telegram - strips all HTML tags from external content
+ * since it may contain malformed or unsupported tags
+ */
+function sanitizeForTelegram(text) {
+  if (!text) return '';
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')  // Convert <br> to newlines
+    .replace(/<[^>]+>/g, '');        // Strip all HTML tags
+}
+
 if (!TELEGRAM_BOT_TOKEN) {
   console.error('❌ TELEGRAM_BOT_TOKEN is required');
   process.exit(1);
@@ -58,7 +69,7 @@ async function main() {
 📝 Pratica: <code>${status.praticaNumber}</code>
 📅 ${status.pubDate}
 
-${status.description}`;
+${sanitizeForTelegram(status.description)}`;
 
       const sent = await sendTelegramMessage(chatId, message);
       if (sent) {
