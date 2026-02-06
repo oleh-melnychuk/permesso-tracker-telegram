@@ -1,0 +1,30 @@
+name: Check Permesso Status
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 9:00 AM CET (winter)
+  
+  workflow_dispatch:
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check and notify all users
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: npm run notify
