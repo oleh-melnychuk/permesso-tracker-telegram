@@ -1,6 +1,7 @@
 {
   "name": "permesso-tracker-telegram",
   "version": "1.0.0",
+  "packageManager": "yarn@1.22.22",
   "description": "Track Italian residence permit (permesso di soggiorno) status and send notifications to Telegram",
   "main": "src/index.js",
   "type": "module",
