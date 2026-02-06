@@ -1,19 +1,9 @@
 import 'dotenv/config';
 import { getAllSessions, closeRedis } from './sessions.js';
-import { fetchPermessoStatus } from './permesso-checker.js';
+import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
+import { t, getApiLang, DEFAULT_LANG } from './i18n.js';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-
-/**
- * Sanitize HTML for Telegram - strips all HTML tags from external content
- * since it may contain malformed or unsupported tags
- */
-function sanitizeForTelegram(text) {
-  if (!text) return '';
-  return text
-    .replace(/<br\s*\/?>/gi, '\n')  // Convert <br> to newlines
-    .replace(/<[^>]+>/g, '');        // Strip all HTML tags
-}
 
 if (!TELEGRAM_BOT_TOKEN) {
   console.error('❌ TELEGRAM_BOT_TOKEN is required');
@@ -47,29 +37,31 @@ async function main() {
   
   if (chatIds.length === 0) {
     console.log('No sessions to notify');
+    await closeRedis();
     return;
   }
   
   console.log(`📤 Notifying ${chatIds.length} user(s)...`);
   
   for (const chatId of chatIds) {
-    const { pratica } = sessions[chatId];
-    console.log(`\n🔍 Checking ${pratica} for chat ${chatId}`);
+    const { pratica, lang = DEFAULT_LANG } = sessions[chatId];
+    console.log(`\n🔍 Checking ${pratica} for chat ${chatId} (${lang})`);
     
     try {
-      const status = await fetchPermessoStatus(pratica);
+      const apiLang = getApiLang(lang);
+      const status = await fetchPermessoStatus(pratica, apiLang);
       
       if (!status) {
-        await sendTelegramMessage(chatId, `❌ Could not fetch status for ${pratica}`);
+        await sendTelegramMessage(chatId, t(lang, 'notifyError', sanitizeForTelegram(pratica)));
         continue;
       }
       
-      const message = `📋 <b>Permesso di Soggiorno</b>
+      const message = `${t(lang, 'notifyTitle')}
 
-📝 Pratica: <code>${status.praticaNumber}</code>
+📝 ${t(lang, 'praticaLabel')}: <code>${status.praticaNumber}</code>
 📅 ${status.pubDate}
 
-${sanitizeForTelegram(status.description)}`;
+${status.description}`;
 
       const sent = await sendTelegramMessage(chatId, message);
       if (sent) {

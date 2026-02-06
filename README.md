@@ -8,14 +8,16 @@ A Telegram bot that tracks Italian residence permit (permesso di soggiorno) stat
 - 🔄 Daily notifications at 9:00 AM Rome time via GitHub Actions
 - 🤖 Telegram bot commands for self-registration
 - 💾 Redis storage for sessions
+- 🌐 Multi-language support (🇬🇧 English, 🇮🇹 Italiano, 🇺🇦 Українська)
 
 ## Bot Commands
 
 - `/start` - Welcome message
-- `/add 26**00012` - Add your pratica to track
+- `/add 26FR000001` - Add your pratica to track
 - `/remove` - Stop tracking
 - `/status` - Check current status
 - `/info` - Show your tracked pratica
+- `/lang` - Change language
 
 ## Setup
 

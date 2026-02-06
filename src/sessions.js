@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { DEFAULT_LANG } from './i18n.js';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const SESSIONS_KEY = 'permesso:sessions';
@@ -12,12 +13,33 @@ function getRedis() {
   return redis;
 }
 
-export async function saveSession(chatId, pratica) {
+export async function saveSession(chatId, pratica, lang = DEFAULT_LANG) {
+  const existing = await getSession(chatId);
   const session = {
     pratica,
-    createdAt: new Date().toISOString(),
+    lang: lang || existing?.lang || DEFAULT_LANG,
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
   await getRedis().hset(SESSIONS_KEY, chatId.toString(), JSON.stringify(session));
+}
+
+export async function updateSessionLang(chatId, lang) {
+  const existing = await getSession(chatId);
+  if (existing) {
+    existing.lang = lang;
+    existing.updatedAt = new Date().toISOString();
+    await getRedis().hset(SESSIONS_KEY, chatId.toString(), JSON.stringify(existing));
+  } else {
+    // Create session with just language (no pratica yet)
+    const session = {
+      pratica: null,
+      lang,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await getRedis().hset(SESSIONS_KEY, chatId.toString(), JSON.stringify(session));
+  }
 }
 
 export async function removeSession(chatId) {
@@ -29,11 +51,20 @@ export async function getSession(chatId) {
   return data ? JSON.parse(data) : null;
 }
 
+export async function getUserLang(chatId) {
+  const session = await getSession(chatId);
+  return session?.lang || DEFAULT_LANG;
+}
+
 export async function getAllSessions() {
   const data = await getRedis().hgetall(SESSIONS_KEY);
   const sessions = {};
   for (const [chatId, value] of Object.entries(data)) {
-    sessions[chatId] = JSON.parse(value);
+    const session = JSON.parse(value);
+    // Only include sessions with pratica
+    if (session.pratica) {
+      sessions[chatId] = session;
+    }
   }
   return sessions;
 }

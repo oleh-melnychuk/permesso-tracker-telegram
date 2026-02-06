@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import TelegramBot from 'node-telegram-bot-api';
-import { saveSession, removeSession, getSession } from './sessions.js';
-import { fetchPermessoStatus } from './permesso-checker.js';
+import { saveSession, removeSession, getSession, getUserLang, updateSessionLang } from './sessions.js';
+import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
+import { t, LANGUAGES, getApiLang, DEFAULT_LANG } from './i18n.js';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -12,136 +13,149 @@ if (!TELEGRAM_BOT_TOKEN) {
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
-/**
- * Sanitize HTML for Telegram - strips all HTML tags from external content
- * since it may contain malformed or unsupported tags
- */
-function sanitizeForTelegram(text) {
-  if (!text) return '';
-  return text
-    .replace(/<br\s*\/?>/gi, '\n')  // Convert <br> to newlines
-    .replace(/<[^>]+>/g, '');        // Strip all HTML tags
-}
-
 // /start command
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
+  const lang = await getUserLang(chatId);
   
-  await bot.sendMessage(chatId, `👋 Welcome to Permesso Tracker Bot!
+  await bot.sendMessage(chatId, t(lang, 'welcome'), { parse_mode: 'HTML' });
+});
 
-I can track your Italian residence permit status and notify you daily at 9:00 AM Rome time.
+// /lang command - show language selection
+bot.onText(/\/lang/, async (msg) => {
+  const chatId = msg.chat.id;
+  const lang = await getUserLang(chatId);
+  
+  const keyboard = {
+    inline_keyboard: Object.entries(LANGUAGES).map(([code, { name, flag }]) => ([
+      { text: `${flag} ${name}`, callback_data: `lang:${code}` }
+    ]))
+  };
+  
+  await bot.sendMessage(chatId, t(lang, 'langPrompt'), {
+    parse_mode: 'HTML',
+    reply_markup: keyboard,
+  });
+});
 
-<b>Commands:</b>
-/add <code>PRATICA_NUMBER</code> - Add your pratica to track
-/remove - Stop tracking
-/status - Check current status
-/info - Show your tracked pratica
-
-<b>Example:</b>
-/add 26RO00001`, { parse_mode: 'HTML' });
+// Handle language selection callback
+bot.on('callback_query', async (query) => {
+  const chatId = query.message.chat.id;
+  const data = query.data;
+  
+  if (data.startsWith('lang:')) {
+    const newLang = data.split(':')[1];
+    
+    if (LANGUAGES[newLang]) {
+      await updateSessionLang(chatId, newLang);
+      await bot.answerCallbackQuery(query.id);
+      await bot.sendMessage(chatId, t(newLang, 'langChanged', newLang), { parse_mode: 'HTML' });
+      await bot.sendMessage(chatId, t(newLang, 'welcome'), { parse_mode: 'HTML' });
+    }
+  }
 });
 
 // /add command
 bot.onText(/\/add(?:\s+(.+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
+  const lang = await getUserLang(chatId);
   const pratica = match[1]?.trim();
   
   if (!pratica) {
-    await bot.sendMessage(chatId, `❌ Please provide your pratica number.
-
-<b>Example:</b> /add 26RO00001`, { parse_mode: 'HTML' });
+    await bot.sendMessage(chatId, t(lang, 'addMissing'), { parse_mode: 'HTML' });
     return;
   }
   
-  // Validate by trying to fetch
-  await bot.sendMessage(chatId, '🔍 Validating pratica number...');
+  await bot.sendMessage(chatId, t(lang, 'addValidating'));
   
   try {
-    const status = await fetchPermessoStatus(pratica);
+    const apiLang = getApiLang(lang);
+    const status = await fetchPermessoStatus(pratica, apiLang);
     
     if (!status) {
-      await bot.sendMessage(chatId, '❌ Could not validate pratica. Please check the number.');
+      await bot.sendMessage(chatId, t(lang, 'addInvalid'));
       return;
     }
     
-    // Save session
-    await saveSession(chatId, pratica);
+    await saveSession(chatId, pratica, lang);
     
-    await bot.sendMessage(chatId, `✅ Pratica <code>${pratica}</code> added!
+    await bot.sendMessage(chatId, `${t(lang, 'addSuccess', sanitizeForTelegram(pratica))}
 
-You will receive daily updates at 9:00 AM Rome time.
-
-Current status:
-${sanitizeForTelegram(status.description)}`, { parse_mode: 'HTML' });
+${t(lang, 'currentStatus')}:
+${status.description}`, { parse_mode: 'HTML' });
     
   } catch (error) {
-    await bot.sendMessage(chatId, `❌ Error: ${error.message}`);
+    await bot.sendMessage(chatId, t(lang, 'error', sanitizeForTelegram(error.message)));
   }
 });
 
 // /remove command
 bot.onText(/\/remove/, async (msg) => {
   const chatId = msg.chat.id;
-  
+  const lang = await getUserLang(chatId);
   const session = await getSession(chatId);
   
-  if (!session) {
-    await bot.sendMessage(chatId, '❌ You have no pratica being tracked.');
+  if (!session?.pratica) {
+    await bot.sendMessage(chatId, t(lang, 'removeNone'));
     return;
   }
   
   await removeSession(chatId);
-  await bot.sendMessage(chatId, '✅ Tracking removed. Use /add to track a new pratica.');
+  await bot.sendMessage(chatId, t(lang, 'removeSuccess'));
 });
 
 // /status command
 bot.onText(/\/status/, async (msg) => {
   const chatId = msg.chat.id;
-  
+  const lang = await getUserLang(chatId);
   const session = await getSession(chatId);
   
-  if (!session) {
-    await bot.sendMessage(chatId, '❌ No pratica tracked. Use /add <pratica> first.');
+  if (!session?.pratica) {
+    await bot.sendMessage(chatId, t(lang, 'statusNone'));
     return;
   }
   
-  await bot.sendMessage(chatId, '🔍 Checking status...');
+  await bot.sendMessage(chatId, t(lang, 'statusChecking'));
   
   try {
-    const status = await fetchPermessoStatus(session.pratica);
+    const apiLang = getApiLang(lang);
+    const status = await fetchPermessoStatus(session.pratica, apiLang);
     
     if (!status) {
-      await bot.sendMessage(chatId, '❌ Could not fetch status.');
+      await bot.sendMessage(chatId, t(lang, 'statusError'));
       return;
     }
     
-    await bot.sendMessage(chatId, `📋 <b>Permesso di Soggiorno</b>
+    await bot.sendMessage(chatId, `${t(lang, 'notifyTitle')}
 
-📝 Pratica: <code>${status.praticaNumber}</code>
+📝 ${t(lang, 'praticaLabel')}: <code>${status.praticaNumber}</code>
 📅 ${status.pubDate}
 
-${sanitizeForTelegram(status.description)}`, { parse_mode: 'HTML' });
+${status.description}`, { parse_mode: 'HTML' });
     
   } catch (error) {
-    await bot.sendMessage(chatId, `❌ Error: ${error.message}`);
+    await bot.sendMessage(chatId, t(lang, 'error', sanitizeForTelegram(error.message)));
   }
 });
 
 // /info command
 bot.onText(/\/info/, async (msg) => {
   const chatId = msg.chat.id;
-  
+  const lang = await getUserLang(chatId);
   const session = await getSession(chatId);
   
-  if (!session) {
-    await bot.sendMessage(chatId, '❌ No pratica tracked. Use /add <pratica> first.');
+  if (!session?.pratica) {
+    await bot.sendMessage(chatId, t(lang, 'infoNone'));
     return;
   }
   
-  await bot.sendMessage(chatId, `📋 <b>Your Tracker</b>
+  const langInfo = LANGUAGES[session.lang] || LANGUAGES[DEFAULT_LANG];
+  
+  await bot.sendMessage(chatId, `${t(lang, 'infoTitle')}
 
-📝 Pratica: <code>${session.pratica}</code>
-📅 Added: ${new Date(session.createdAt).toLocaleDateString()}`, { parse_mode: 'HTML' });
+📝 ${t(lang, 'praticaLabel')}: <code>${sanitizeForTelegram(session.pratica)}</code>
+🌐 ${langInfo.flag} ${langInfo.name}
+📅 ${t(lang, 'addedLabel')}: ${new Date(session.createdAt).toLocaleDateString()}`, { parse_mode: 'HTML' });
 });
 
 console.log('🤖 Bot started! Listening for commands...');

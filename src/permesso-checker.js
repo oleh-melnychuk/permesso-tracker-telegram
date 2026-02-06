@@ -3,6 +3,19 @@ import { XMLParser } from 'fast-xml-parser';
 const BASE_URL = 'https://questure.poliziadistato.it/servizio/stranieri';
 
 /**
+ * Sanitize text for Telegram HTML parse mode
+ */
+export function sanitizeForTelegram(text) {
+  if (!text) return '';
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
  * Fetch permesso di soggiorno status from the police website
  * @param {string} praticaNumber - The pratica (case) number
  * @param {string} lang - Language code (ukrainian, english, italian, etc.)
@@ -37,9 +50,9 @@ export async function fetchPermessoStatus(praticaNumber, lang = 'ukrainian') {
   }
   
   return {
-    praticaNumber,
-    description: item.description?.trim() || '',
-    pubDate: item.pubDate || '',
+    praticaNumber: sanitizeForTelegram(praticaNumber),
+    description: sanitizeForTelegram(item.description?.trim() || ''),
+    pubDate: sanitizeForTelegram(item.pubDate || ''),
     link: item.guid || '',
   };
 }
