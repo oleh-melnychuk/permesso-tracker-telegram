@@ -4,14 +4,31 @@ import { saveSession, removeSession, getSession, getUserLang, updateSessionLang 
 import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
 import { t, LANGUAGES, getApiLang, DEFAULT_LANG } from './i18n.js';
 
+console.log('🚀 Starting bot...');
+
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const REDIS_URL = process.env.REDIS_URL;
 
 if (!TELEGRAM_BOT_TOKEN) {
   console.error('❌ TELEGRAM_BOT_TOKEN is required');
   process.exit(1);
 }
 
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+if (!REDIS_URL) {
+  console.error('❌ REDIS_URL is required');
+  process.exit(1);
+}
+
+console.log('✅ Environment variables OK');
+
+let bot;
+try {
+  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+  console.log('✅ Telegram bot initialized');
+} catch (error) {
+  console.error('❌ Failed to initialize Telegram bot:', error.message);
+  process.exit(1);
+}
 
 // /start command
 bot.onText(/\/start/, async (msg) => {
@@ -156,6 +173,21 @@ bot.onText(/\/info/, async (msg) => {
 📝 ${t(lang, 'praticaLabel')}: <code>${sanitizeForTelegram(session.pratica)}</code>
 🌐 ${langInfo.flag} ${langInfo.name}
 📅 ${t(lang, 'addedLabel')}: ${new Date(session.createdAt).toLocaleDateString()}`, { parse_mode: 'HTML' });
+});
+
+// Handle polling errors
+bot.on('polling_error', (error) => {
+  console.error('❌ Polling error:', error.message);
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught exception:', error.message);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error('❌ Unhandled rejection:', error.message);
 });
 
 console.log('🤖 Bot started! Listening for commands...');
