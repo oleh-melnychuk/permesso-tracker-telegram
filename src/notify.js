@@ -6,7 +6,7 @@ import { t, getApiLang, DEFAULT_LANG } from './i18n.js';
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 if (!TELEGRAM_BOT_TOKEN) {
-  console.error('❌ TELEGRAM_BOT_TOKEN is required');
+  console.error('TELEGRAM_BOT_TOKEN is required');
   process.exit(1);
 }
 
@@ -23,12 +23,7 @@ async function sendTelegramMessage(chatId, message) {
     }),
   });
   
-  if (!response.ok) {
-    const error = await response.text();
-    console.error(`Failed to send to ${chatId}: ${error}`);
-    return false;
-  }
-  return true;
+  return response.ok;
 }
 
 async function main() {
@@ -36,16 +31,15 @@ async function main() {
   const chatIds = Object.keys(sessions);
   
   if (chatIds.length === 0) {
-    console.log('No sessions to notify');
     await closeRedis();
     return;
   }
   
-  console.log(`📤 Notifying ${chatIds.length} user(s)...`);
+  let sent = 0;
+  let failed = 0;
   
   for (const chatId of chatIds) {
     const { pratica, lang = DEFAULT_LANG } = sessions[chatId];
-    console.log(`\n🔍 Checking ${pratica} for chat ${chatId} (${lang})`);
     
     try {
       const apiLang = getApiLang(lang);
@@ -53,6 +47,7 @@ async function main() {
       
       if (!status) {
         await sendTelegramMessage(chatId, t(lang, 'notifyError', sanitizeForTelegram(pratica)));
+        failed++;
         continue;
       }
       
@@ -63,16 +58,14 @@ async function main() {
 
 ${status.description}`;
 
-      const sent = await sendTelegramMessage(chatId, message);
-      if (sent) {
-        console.log(`✅ Notified chat ${chatId}`);
-      }
-    } catch (error) {
-      console.error(`❌ Error for ${chatId}: ${error.message}`);
+      const ok = await sendTelegramMessage(chatId, message);
+      ok ? sent++ : failed++;
+    } catch {
+      failed++;
     }
   }
   
-  console.log('\n✅ Done');
+  console.log(`Notified: ${sent}, Failed: ${failed}`);
   await closeRedis();
 }
 
