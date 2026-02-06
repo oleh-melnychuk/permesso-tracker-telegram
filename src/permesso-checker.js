@@ -4,15 +4,41 @@ const BASE_URL = 'https://questure.poliziadistato.it/servizio/stranieri';
 
 /**
  * Sanitize text for Telegram HTML parse mode
+ * Preserves <a href="...">...</a> links and <br> tags
  */
 export function sanitizeForTelegram(text) {
   if (!text) return '';
-  return text
-    .replace(/<br\s*\/?>/gi, '\n')
+  
+  // Placeholder for links
+  const links = [];
+  
+  // Extract and preserve <a> tags
+  let result = text.replace(/<a\s+href="([^"]+)"[^>]*>(.*?)<\/a>/gi, (match, href, content) => {
+    const placeholder = `__LINK_${links.length}__`;
+    links.push({ href, content });
+    return placeholder;
+  });
+  
+  // Convert <br> to newlines
+  result = result.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Escape HTML special characters
+  result = result
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+  
+  // Restore links with Telegram-compatible HTML
+  links.forEach((link, index) => {
+    const safeContent = link.content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    result = result.replace(`__LINK_${index}__`, `<a href="${link.href}">${safeContent}</a>`);
+  });
+  
+  return result;
 }
 
 /**
