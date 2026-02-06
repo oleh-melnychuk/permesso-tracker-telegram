@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { createServer } from 'http';
 import TelegramBot from 'node-telegram-bot-api';
 import { saveSession, removeSession, getSession, getUserLang, updateSessionLang } from './sessions.js';
 import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
@@ -159,11 +158,4 @@ bot.onText(/\/info/, async (msg) => {
 📅 ${t(lang, 'addedLabel')}: ${new Date(session.createdAt).toLocaleDateString()}`, { parse_mode: 'HTML' });
 });
 
-// Health check server for Render/hosting platforms
-const PORT = process.env.PORT || 3000;
-createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('OK');
-}).listen(PORT);
-
-console.log(`🤖 Bot started on port ${PORT}`);
+console.log('🤖 Bot started! Listening for commands...');
