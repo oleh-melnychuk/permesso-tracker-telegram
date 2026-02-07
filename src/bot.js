@@ -31,7 +31,7 @@ try {
 }
 
 // Bot command definitions
-const COMMAND_KEYS = ['start', 'add', 'status', 'info', 'remove', 'lang'];
+const COMMAND_KEYS = ['start', 'add', 'status', 'info', 'remove', 'lang', 'donate'];
 const CMD_TRANSLATION_KEYS = {
   start: 'cmdStart',
   add: 'cmdAdd',
@@ -39,6 +39,7 @@ const CMD_TRANSLATION_KEYS = {
   info: 'cmdInfo',
   remove: 'cmdRemove',
   lang: 'cmdLang',
+  donate: 'cmdDonate',
 };
 
 // Set commands for a specific chat in a given language
@@ -101,6 +102,17 @@ bot.onText(/\/lang/, async (msg) => {
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
+  
+  if (data.startsWith('donate:')) {
+    const amount = parseInt(data.split(':')[1]);
+    const lang = await getUserLang(chatId);
+    
+    await bot.answerCallbackQuery(query.id);
+    await bot.sendInvoice(chatId, t(lang, 'donateTitle'), t(lang, 'donateDescription'), `donate_${chatId}_${Date.now()}`, '', 'XTR', [
+      { label: 'Donation', amount },
+    ]);
+    return;
+  }
   
   if (data.startsWith('lang:')) {
     const newLang = data.split(':')[1];
@@ -216,6 +228,41 @@ bot.onText(/\/info/, async (msg) => {
 📝 ${t(lang, 'praticaLabel')}: <code>${sanitizeForTelegram(session.pratica)}</code>
 🌐 ${langInfo.flag} ${langInfo.name}
 📅 ${t(lang, 'addedLabel')}: ${new Date(session.createdAt).toLocaleDateString()}`, { parse_mode: 'HTML' });
+});
+
+// /donate command
+bot.onText(/\/donate/, async (msg) => {
+  const chatId = msg.chat.id;
+  const lang = await getUserLang(chatId);
+  
+  const keyboard = {
+    inline_keyboard: [
+      [
+        { text: `⭐ ${t(lang, 'donateBtn1')}`, callback_data: 'donate:1' },
+        { text: `⭐ ${t(lang, 'donateBtn5')}`, callback_data: 'donate:5' },
+        { text: `⭐ ${t(lang, 'donateBtn10')}`, callback_data: 'donate:10' },
+      ],
+    ],
+  };
+  
+  await bot.sendMessage(chatId, t(lang, 'donateMessage'), {
+    parse_mode: 'HTML',
+    reply_markup: keyboard,
+  });
+});
+
+// Handle pre-checkout query (must be answered quickly)
+bot.on('pre_checkout_query', async (query) => {
+  await bot.answerPreCheckoutQuery(query.id, true);
+});
+
+// Handle successful payment
+bot.on('message', async (msg) => {
+  if (msg.successful_payment) {
+    const chatId = msg.chat.id;
+    const lang = await getUserLang(chatId);
+    await bot.sendMessage(chatId, t(lang, 'donateSuccess'), { parse_mode: 'HTML' });
+  }
 });
 
 // Handle polling errors

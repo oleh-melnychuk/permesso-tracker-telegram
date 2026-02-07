@@ -59,6 +59,19 @@ You will receive daily updates at 9:00 AM Rome time.`,
     cmdInfo: 'Show tracked pratica info',
     cmdRemove: 'Stop tracking pratica',
     cmdLang: 'Change language',
+    cmdDonate: 'Support the bot developer',
+
+    donateMessage: `☕ <b>Support the developer</b>
+
+If this bot is useful to you, you can say thanks by sending a small donation via Telegram Stars!
+
+Choose an amount:`,
+    donateBtn1: '1 Star',
+    donateBtn5: '5 Stars',
+    donateBtn10: '10 Stars',
+    donateTitle: 'Support Permesso Tracker Bot',
+    donateDescription: 'Thank you for supporting the developer!',
+    donateSuccess: '🎉 Thank you for your donation! Your support means a lot!',
   },
 
   it: {
@@ -113,6 +126,19 @@ Riceverai aggiornamenti giornalieri alle 9:00 ora di Roma.`,
     cmdInfo: 'Mostra info pratica monitorata',
     cmdRemove: 'Smetti di monitorare la pratica',
     cmdLang: 'Cambia lingua',
+    cmdDonate: 'Supporta lo sviluppatore',
+
+    donateMessage: `☕ <b>Supporta lo sviluppatore</b>
+
+Se questo bot ti è utile, puoi ringraziare inviando una piccola donazione tramite Telegram Stars!
+
+Scegli un importo:`,
+    donateBtn1: '1 Stella',
+    donateBtn5: '5 Stelle',
+    donateBtn10: '10 Stelle',
+    donateTitle: 'Supporta Permesso Tracker Bot',
+    donateDescription: 'Grazie per il tuo supporto allo sviluppatore!',
+    donateSuccess: '🎉 Grazie per la tua donazione! Il tuo supporto significa molto!',
   },
 
   uk: {
@@ -167,6 +193,19 @@ Riceverai aggiornamenti giornalieri alle 9:00 ora di Roma.`,
     cmdInfo: 'Показати інфо про справу',
     cmdRemove: 'Припинити відстеження справи',
     cmdLang: 'Змінити мову',
+    cmdDonate: 'Підтримати розробника',
+
+    donateMessage: `☕ <b>Підтримати розробника</b>
+
+Якщо цей бот корисний для вас, ви можете подякувати, надіславши невелику донацію через Telegram Stars!
+
+Оберіть суму:`,
+    donateBtn1: '1 Зірка',
+    donateBtn5: '5 Зірок',
+    donateBtn10: '10 Зірок',
+    donateTitle: 'Підтримка Permesso Tracker Bot',
+    donateDescription: 'Дякуємо за підтримку розробника!',
+    donateSuccess: '🎉 Дякуємо за вашу донацію! Ваша підтримка дуже важлива!',
   },
 };
 
