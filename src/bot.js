@@ -30,11 +30,43 @@ try {
   process.exit(1);
 }
 
+// Bot command definitions
+const COMMAND_KEYS = ['start', 'add', 'status', 'info', 'remove', 'lang'];
+const CMD_TRANSLATION_KEYS = {
+  start: 'cmdStart',
+  add: 'cmdAdd',
+  status: 'cmdStatus',
+  info: 'cmdInfo',
+  remove: 'cmdRemove',
+  lang: 'cmdLang',
+};
+
+// Set commands for a specific chat in a given language
+async function setCommandsForChat(chatId, lang) {
+  const commands = COMMAND_KEYS.map((cmd) => ({
+    command: cmd,
+    description: t(lang, CMD_TRANSLATION_KEYS[cmd]),
+  }));
+  await bot.setMyCommands(commands, {
+    scope: { type: 'chat', chat_id: chatId },
+  });
+}
+
+// Set default commands (English) on startup
+bot.setMyCommands(
+  COMMAND_KEYS.map((cmd) => ({ command: cmd, description: t('en', CMD_TRANSLATION_KEYS[cmd]) }))
+).then(() => {
+  console.log('✅ Default bot commands menu set');
+}).catch((err) => {
+  console.error('⚠️ Failed to set bot commands:', err.message);
+});
+
 // /start command
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   const lang = await getUserLang(chatId);
   
+  await setCommandsForChat(chatId, lang);
   await bot.sendMessage(chatId, t(lang, 'welcome'), { parse_mode: 'HTML' });
 });
 
@@ -65,6 +97,7 @@ bot.on('callback_query', async (query) => {
     
     if (LANGUAGES[newLang]) {
       await updateSessionLang(chatId, newLang);
+      await setCommandsForChat(chatId, newLang);
       await bot.answerCallbackQuery(query.id);
       await bot.sendMessage(chatId, t(newLang, 'langChanged', newLang), { parse_mode: 'HTML' });
       await bot.sendMessage(chatId, t(newLang, 'welcome'), { parse_mode: 'HTML' });

@@ -52,6 +52,13 @@ You will receive daily updates at 9:00 AM Rome time.`,
     dateLabel: 'Date',
     addedLabel: 'Added',
     currentStatus: 'Current status',
+
+    cmdStart: 'Start the bot',
+    cmdAdd: 'Add pratica number to track',
+    cmdStatus: 'Check current permesso status',
+    cmdInfo: 'Show tracked pratica info',
+    cmdRemove: 'Stop tracking pratica',
+    cmdLang: 'Change language',
   },
 
   it: {
@@ -99,6 +106,13 @@ Riceverai aggiornamenti giornalieri alle 9:00 ora di Roma.`,
     dateLabel: 'Data',
     addedLabel: 'Aggiunto',
     currentStatus: 'Stato attuale',
+
+    cmdStart: 'Avvia il bot',
+    cmdAdd: 'Aggiungi numero pratica da monitorare',
+    cmdStatus: 'Controlla lo stato del permesso',
+    cmdInfo: 'Mostra info pratica monitorata',
+    cmdRemove: 'Smetti di monitorare la pratica',
+    cmdLang: 'Cambia lingua',
   },
 
   uk: {
@@ -146,6 +160,13 @@ Riceverai aggiornamenti giornalieri alle 9:00 ora di Roma.`,
     dateLabel: 'Дата',
     addedLabel: 'Додано',
     currentStatus: 'Поточний статус',
+
+    cmdStart: 'Запустити бота',
+    cmdAdd: 'Додати номер справи для відстеження',
+    cmdStatus: 'Перевірити статус перебування',
+    cmdInfo: 'Показати інфо про справу',
+    cmdRemove: 'Припинити відстеження справи',
+    cmdLang: 'Змінити мову',
   },
 };
 
