@@ -9,7 +9,8 @@
     "bot": "node src/bot.js",
     "bot:dev": "node --watch src/bot.js",
     "notify": "node src/notify.js",
-    "check": "node src/check-once.js"
+    "check": "node src/check-once.js",
+    "donate-remind": "node src/donate-remind.js"
   },
   "keywords": [
     "permesso",

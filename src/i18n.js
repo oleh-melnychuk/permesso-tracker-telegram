@@ -73,6 +73,11 @@ Choose an amount:`,
     donateTitle: 'Support Permesso Tracker Bot',
     donateDescription: 'Thank you for supporting the developer!',
     donateSuccess: '🎉 Thank you for your donation! Your support means a lot!',
+    donateReminder: `☕ <b>Enjoying Permesso Tracker?</b>
+
+If this bot helps you, consider supporting the developer with a small donation via Telegram Stars!
+
+Tap /donate to contribute ⭐`,
   },
 
   it: {
@@ -141,6 +146,11 @@ Scegli un importo:`,
     donateTitle: 'Supporta Permesso Tracker Bot',
     donateDescription: 'Grazie per il tuo supporto allo sviluppatore!',
     donateSuccess: '🎉 Grazie per la tua donazione! Il tuo supporto significa molto!',
+    donateReminder: `☕ <b>Ti piace Permesso Tracker?</b>
+
+Se questo bot ti è utile, considera di supportare lo sviluppatore con una piccola donazione tramite Telegram Stars!
+
+Tocca /donate per contribuire ⭐`,
   },
 
   uk: {
@@ -209,6 +219,11 @@ Scegli un importo:`,
     donateTitle: 'Підтримка Permesso Tracker Bot',
     donateDescription: 'Дякуємо за підтримку розробника!',
     donateSuccess: '🎉 Дякуємо за вашу донацію! Ваша підтримка дуже важлива!',
+    donateReminder: `☕ <b>Подобається Permesso Tracker?</b>
+
+Якщо цей бот вам корисний, підтримайте розробника невеликою донацією через Telegram Stars!
+
+Натисніть /donate щоб зробити внесок ⭐`,
   },
 };
 
