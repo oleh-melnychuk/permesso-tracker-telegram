@@ -18,6 +18,7 @@ I can track your Italian residence permit status and notify you daily at 9:00 AM
 /status - Check current status
 /info - Show your tracked pratica
 /lang - Change language
+/donate - Support the developer ☕
 
 <b>Example:</b>
 /add 26FR000001`,
@@ -85,6 +86,7 @@ Posso monitorare lo stato del tuo permesso di soggiorno e notificarti ogni giorn
 /status - Controlla lo stato attuale
 /info - Mostra la tua pratica
 /lang - Cambia lingua
+/donate - Supporta lo sviluppatore ☕
 
 <b>Esempio:</b>
 /add 26FR000001`,
@@ -152,6 +154,7 @@ Scegli un importo:`,
 /status - Перевірити поточний статус
 /info - Показати вашу справу
 /lang - Змінити мову
+/donate - Підтримати розробника ☕
 
 <b>Приклад:</b>
 /add 26FR000001`,
