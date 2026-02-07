@@ -1,0 +1,21 @@
+name: Deploy to JustRunMy.app
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for push
+      
+      - name: Deploy to JustRunMy.app
+        run: |
+          git remote add deploy https://${{ secrets.JUSTRUNMY_USER }}:${{ secrets.JUSTRUNMY_TOKEN }}@justrunmy.app/git/${{ secrets.JUSTRUNMY_REPO_ID }}
+          git push deploy HEAD:deploy --force
