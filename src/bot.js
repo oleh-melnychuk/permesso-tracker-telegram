@@ -64,7 +64,17 @@ bot.setMyCommands(
 // /start command
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
-  const lang = await getUserLang(chatId);
+  const session = await getSession(chatId);
+  
+  // Auto-detect language from Telegram on first start
+  let lang;
+  if (!session) {
+    const tgLang = msg.from?.language_code?.split('-')[0]; // e.g. "en", "it", "uk"
+    lang = LANGUAGES[tgLang] ? tgLang : DEFAULT_LANG;
+    await updateSessionLang(chatId, lang);
+  } else {
+    lang = session.lang || DEFAULT_LANG;
+  }
   
   await setCommandsForChat(chatId, lang);
   await bot.sendMessage(chatId, t(lang, 'welcome'), { parse_mode: 'HTML' });
