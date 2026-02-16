@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import TelegramBot from 'node-telegram-bot-api';
-import { saveSession, removeSession, getSession, getUserLang, updateSessionLang, removeLastStatus } from './sessions.js';
+import { saveSession, removeSession, getSession, getUserLang, updateSessionLang, updateUserInfo, removeLastStatus } from './sessions.js';
 import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
 import { t, LANGUAGES, getApiLang, DEFAULT_LANG } from './i18n.js';
 
@@ -67,10 +67,13 @@ bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   const session = await getSession(chatId);
   
+  // Save user info from Telegram
+  await updateUserInfo(chatId, msg.from);
+  
   // Auto-detect language from Telegram on first start
   let lang;
   if (!session) {
-    const tgLang = msg.from?.language_code?.split('-')[0]; // e.g. "en", "it", "uk"
+    const tgLang = msg.from?.language_code?.split('-')[0];
     lang = LANGUAGES[tgLang] ? tgLang : DEFAULT_LANG;
     await updateSessionLang(chatId, lang);
   } else {

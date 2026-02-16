@@ -31,10 +31,33 @@ export async function updateSessionLang(chatId, lang) {
     existing.updatedAt = new Date().toISOString();
     await getRedis().hset(SESSIONS_KEY, chatId.toString(), JSON.stringify(existing));
   } else {
-    // Create session with just language (no pratica yet)
     const session = {
       pratica: null,
       lang,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await getRedis().hset(SESSIONS_KEY, chatId.toString(), JSON.stringify(session));
+  }
+}
+
+export async function updateUserInfo(chatId, from) {
+  const existing = await getSession(chatId);
+  const userInfo = {
+    firstName: from?.first_name || null,
+    lastName: from?.last_name || null,
+    username: from?.username || null,
+    languageCode: from?.language_code || null,
+  };
+  if (existing) {
+    existing.user = userInfo;
+    existing.updatedAt = new Date().toISOString();
+    await getRedis().hset(SESSIONS_KEY, chatId.toString(), JSON.stringify(existing));
+  } else {
+    const session = {
+      pratica: null,
+      lang: DEFAULT_LANG,
+      user: userInfo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
