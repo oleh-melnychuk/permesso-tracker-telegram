@@ -1,0 +1,30 @@
+name: Check Permesso Status Changes
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  
+  workflow_dispatch:
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      
+      - name: Check for status changes
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: yarn check-changes

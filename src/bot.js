@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import TelegramBot from 'node-telegram-bot-api';
-import { saveSession, removeSession, getSession, getUserLang, updateSessionLang } from './sessions.js';
+import { saveSession, removeSession, getSession, getUserLang, updateSessionLang, removeLastStatus } from './sessions.js';
 import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
 import { t, LANGUAGES, getApiLang, DEFAULT_LANG } from './i18n.js';
 
@@ -173,6 +173,7 @@ bot.onText(/\/remove/, async (msg) => {
   }
   
   await removeSession(chatId);
+  await removeLastStatus(chatId);
   await bot.sendMessage(chatId, t(lang, 'removeSuccess'));
 });
 

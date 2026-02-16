@@ -69,6 +69,21 @@ export async function getAllSessions() {
   return sessions;
 }
 
+const LAST_STATUS_KEY = 'permesso:last_status';
+
+export async function getLastStatus(chatId) {
+  const data = await getRedis().hget(LAST_STATUS_KEY, chatId.toString());
+  return data || null;
+}
+
+export async function saveLastStatus(chatId, statusDescription) {
+  await getRedis().hset(LAST_STATUS_KEY, chatId.toString(), statusDescription);
+}
+
+export async function removeLastStatus(chatId) {
+  await getRedis().hdel(LAST_STATUS_KEY, chatId.toString());
+}
+
 export async function closeRedis() {
   if (redis) {
     await redis.quit();

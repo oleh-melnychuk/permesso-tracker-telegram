@@ -46,6 +46,7 @@ You will receive daily updates at 9:00 AM Rome time.`,
     infoTitle: '📋 <b>Your Tracker</b>',
     
     notifyTitle: '📋 <b>Permesso di Soggiorno</b>',
+    notifyChanged: '🔔 <b>Status changed!</b>',
     notifyError: (pratica) => `❌ Could not fetch status for ${pratica}`,
     
     error: (msg) => `❌ Error: ${msg}`,
@@ -119,6 +120,7 @@ Riceverai aggiornamenti giornalieri alle 9:00 ora di Roma.`,
     infoTitle: '📋 <b>Il Tuo Tracker</b>',
     
     notifyTitle: '📋 <b>Permesso di Soggiorno</b>',
+    notifyChanged: '🔔 <b>Lo stato è cambiato!</b>',
     notifyError: (pratica) => `❌ Impossibile recuperare lo stato per ${pratica}`,
     
     error: (msg) => `❌ Errore: ${msg}`,
@@ -192,6 +194,7 @@ Tocca /donate per contribuire ⭐`,
     infoTitle: '📋 <b>Ваш Трекер</b>',
     
     notifyTitle: '📋 <b>Permesso di Soggiorno</b>',
+    notifyChanged: '🔔 <b>Статус змінився!</b>',
     notifyError: (pratica) => `❌ Не вдалося отримати статус для ${pratica}`,
     
     error: (msg) => `❌ Помилка: ${msg}`,

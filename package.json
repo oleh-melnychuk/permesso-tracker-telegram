@@ -10,6 +10,7 @@
     "bot:dev": "node --watch src/bot.js",
     "notify": "node src/notify.js",
     "check": "node src/check-once.js",
+    "check-changes": "node src/check-changes.js",
     "donate-remind": "node src/donate-remind.js"
   },
   "keywords": [

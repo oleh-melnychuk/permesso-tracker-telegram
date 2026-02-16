@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { getAllSessions, closeRedis } from './sessions.js';
+import { getAllSessions, getLastStatus, saveLastStatus, closeRedis } from './sessions.js';
 import { fetchPermessoStatus, sanitizeForTelegram } from './permesso-checker.js';
 import { t, getApiLang, DEFAULT_LANG } from './i18n.js';
 
@@ -12,7 +12,7 @@ if (!TELEGRAM_BOT_TOKEN) {
 
 async function sendTelegramMessage(chatId, message) {
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -22,37 +22,58 @@ async function sendTelegramMessage(chatId, message) {
       parse_mode: 'HTML',
     }),
   });
-  
+
   return response.ok;
 }
 
 async function main() {
   const sessions = await getAllSessions();
   const chatIds = Object.keys(sessions);
-  
+
   if (chatIds.length === 0) {
     console.log('No active sessions');
     await closeRedis();
     return;
   }
-  
-  let sent = 0;
+
+  let changed = 0;
+  let unchanged = 0;
   let failed = 0;
-  
+
   for (const chatId of chatIds) {
     const { pratica, lang = DEFAULT_LANG } = sessions[chatId];
-    
+
     try {
       const apiLang = getApiLang(lang);
       const status = await fetchPermessoStatus(pratica, apiLang);
-      
+
       if (!status) {
-        await sendTelegramMessage(chatId, t(lang, 'notifyError', sanitizeForTelegram(pratica)));
         failed++;
         continue;
       }
-      
-      const message = `${t(lang, 'notifyTitle')}
+
+      const lastStatus = await getLastStatus(chatId);
+
+      // Save current status for next comparison
+      if(lastStatus !== status.description) {
+        await saveLastStatus(chatId, status.description);
+      }
+
+      // First run (no previous status) — don't send a change notification
+      if (!lastStatus) {
+        unchanged++;
+        continue;
+      }
+
+      if (lastStatus === status.description) {
+        unchanged++;
+        continue;
+      }
+
+      // Status changed — notify user
+      const message = `${t(lang, 'notifyChanged')}
+
+${t(lang, 'notifyTitle')}
 
 📝 ${t(lang, 'praticaLabel')}: <code>${status.praticaNumber}</code>
 📅 ${status.pubDate}
@@ -60,13 +81,13 @@ async function main() {
 ${status.description}`;
 
       const ok = await sendTelegramMessage(chatId, message);
-      ok ? sent++ : failed++;
+      ok ? changed++ : failed++;
     } catch {
       failed++;
     }
   }
-  
-  console.log(`Daily notify — Sent: ${sent}, Failed: ${failed}`);
+
+  console.log(`Hourly check — Changed: ${changed} | Unchanged: ${unchanged} | Failed: ${failed}`);
   await closeRedis();
 }
 
